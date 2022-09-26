@@ -1,19 +1,16 @@
+/** 
+ * AxiosResponse is a Typescript data definition that can be used
+ * in a RESTful call that returns a response as a promise.  */
+import axios, { AxiosResponse } from 'axios';
+
 interface UserProps {
   /** The ? after the property name makes the propery optional. */
+  id?: number;
   name?: string;
   age?: number;
 }
 
-/** Type alias for a function that has no arguments and no return value. */
-type Callback = () => void;
-
 export class User {
-  /** 
-   * Events property that will be an object that stores events.
-   * It will have keys that have an array of callback functions.
-  */
-  events: { [key: string]: Callback[] } = {};
-
   constructor(private data: UserProps) {}
 
   get(propName: string): (string | number)   {
@@ -30,19 +27,26 @@ export class User {
     Object.assign(this.data, update);
   }
 
-  on(eventName: string, callback: Callback): void {
-    const handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
+  fetch(): void {
+    axios.get(`http://localhost:3000/users/${this.get('id')}`)
+      .then((response: AxiosResponse): void => {
+        this.set(response.data);
+      });
   }
 
-  trigger(eventName: string): void {
-    const handlers = this.events[eventName];
-
-    if (!handlers || handlers.length === 0) return;
+  save(): void {
+    const id = this.get('id');
     
-    handlers.forEach(callback => {
-      callback();
-    });
+    /** 
+     * If a user exists then use a put request to save new data to an existing user.
+     * If a user does not exit then use a post request without an ID and
+     * create a new record.  Axios will automatically generate an ID for a new record.
+     */
+    if (id) {
+      axios.put(`http://localhost:3000/users/${id}`, this.data);
+    } else {
+      // post
+      axios.post('http://localhost:3000/users', this.data);
+    }
   }
 }
