@@ -1,16 +1,22 @@
-/** 
- * AxiosResponse is a Typescript data definition that can be used
- * in a RESTful call that returns a response as a promise.  */
-import axios, { AxiosResponse } from 'axios';
+import {Eventing} from './Eventing';
+import { Sync } from './Sync';
 
-interface UserProps {
+export interface UserProps {
   /** The ? after the property name makes the propery optional. */
   id?: number;
   name?: string;
   age?: number;
 }
 
+const rootUrl = 'http://localhost:3000/users';
+
 export class User {
+  /**
+   * Hard coding an events instance for use in User.
+   */
+  public events: Eventing = new Eventing();
+  public sync: Sync<UserProps> = new Sync<UserProps>(rootUrl);
+
   constructor(private data: UserProps) {}
 
   get(propName: string): (string | number)   {
@@ -27,26 +33,5 @@ export class User {
     Object.assign(this.data, update);
   }
 
-  fetch(): void {
-    axios.get(`http://localhost:3000/users/${this.get('id')}`)
-      .then((response: AxiosResponse): void => {
-        this.set(response.data);
-      });
-  }
-
-  save(): void {
-    const id = this.get('id');
-    
-    /** 
-     * If a user exists then use a put request to save new data to an existing user.
-     * If a user does not exit then use a post request without an ID and
-     * create a new record.  Axios will automatically generate an ID for a new record.
-     */
-    if (id) {
-      axios.put(`http://localhost:3000/users/${id}`, this.data);
-    } else {
-      // post
-      axios.post('http://localhost:3000/users', this.data);
-    }
-  }
+ 
 }
