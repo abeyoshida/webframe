@@ -1,5 +1,6 @@
 import {Eventing} from './Eventing';
 import { Sync } from './Sync';
+import { Attributes } from './Attributes';
 
 export interface UserProps {
   /** The ? after the property name makes the propery optional. */
@@ -16,22 +17,20 @@ export class User {
    */
   public events: Eventing = new Eventing();
   public sync: Sync<UserProps> = new Sync<UserProps>(rootUrl);
+  public attributes: Attributes<UserProps>;
 
-  constructor(private data: UserProps) {}
-
-  get(propName: string): (string | number)   {
-    return this.data[propName];
+  /**
+   * Since we want to be able to pass in UserProps into User when we create 
+   * an instance of User we need to initialize attributes in the constructor.
+   */
+  constructor(attrs: UserProps) {
+    this.attributes = new Attributes<UserProps>(attrs);
   }
 
-  set(update: UserProps): void {
-    /** 
-     * The Object.assign() method takes 2 objects as arguments.  
-     * It takes all of the properties of the second object and copies
-     * them over into the first object.  If a property already 
-     * exists then it overrides it.
-     */    
-    Object.assign(this.data, update);
+  /**
+   * Create a reference to the this.event.on() function using get.
+   */
+  get on() {
+    return this.events.on;
   }
-
- 
 }
