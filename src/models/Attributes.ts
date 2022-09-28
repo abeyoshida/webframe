@@ -11,11 +11,11 @@ export class Attributes<T> {
    * keys of an object (strings) can be types also.
    * The return value is in the syntax of a regular object - object of T at key of K.
    */
-  get<K extends keyof T>(key: K): T[K]   {
+  get = <K extends keyof T>(key: K): T[K] => {
     return this.data[key];
   }
 
-  set(update: T): void {
+  set = (update: T): void => {
     /** 
      * The Object.assign() method takes 2 objects as arguments.  
      * It takes all of the properties of the second object and copies

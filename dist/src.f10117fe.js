@@ -129,26 +129,29 @@ var Eventing =
 /** @class */
 function () {
   function Eventing() {
+    var _this = this;
     /**
      * Events property that will be an object that stores events.
-     * It will have keys that have an array of callback functions.
+     * The value of each key will be an array of callback functions.
     */
+
+
     this.events = {};
+
+    this.on = function (eventName, callback) {
+      var handlers = _this.events[eventName] || [];
+      handlers.push(callback);
+      _this.events[eventName] = handlers;
+    };
+
+    this.trigger = function (eventName) {
+      var handlers = _this.events[eventName];
+      if (!handlers || handlers.length === 0) return;
+      handlers.forEach(function (callback) {
+        callback();
+      });
+    };
   }
-
-  Eventing.prototype.on = function (eventName, callback) {
-    var handlers = this.events[eventName] || [];
-    handlers.push(callback);
-    this.events[eventName] = handlers;
-  };
-
-  Eventing.prototype.trigger = function (eventName) {
-    var handlers = this.events[eventName];
-    if (!handlers || handlers.length === 0) return;
-    handlers.forEach(function (callback) {
-      callback();
-    });
-  };
 
   return Eventing;
 }();
@@ -4632,7 +4635,6 @@ function () {
     if (id) {
       return axios_1.default.put("".concat(this.rootUrl, "/").concat(id), data);
     } else {
-      // post
       return axios_1.default.post(this.rootUrl, data);
     }
   };
@@ -4641,7 +4643,56 @@ function () {
 }();
 
 exports.Sync = Sync;
-},{"axios":"node_modules/axios/index.js"}],"src/models/User.ts":[function(require,module,exports) {
+},{"axios":"node_modules/axios/index.js"}],"src/models/Attributes.ts":[function(require,module,exports) {
+"use strict"; // import { UserProps } from './User';   // used in the example at the bottom
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Attributes = void 0;
+
+var Attributes =
+/** @class */
+function () {
+  function Attributes(data) {
+    var _this = this;
+
+    this.data = data;
+    /**
+     * We set up a generic constraint on the arguments that get() can receive.
+     * Here we are saying that they can only be keys (K) that are part of T (object).
+     * K can only be a key of T
+     * We are using the Typescript feature that strings can be types and therefore
+     * keys of an object (strings) can be types also.
+     * The return value is in the syntax of a regular object - object of T at key of K.
+     */
+
+    this.get = function (key) {
+      return _this.data[key];
+    };
+
+    this.set = function (update) {
+      /**
+       * The Object.assign() method takes 2 objects as arguments.
+       * It takes all of the properties of the second object and copies
+       * them over into the first object.  If a property already
+       * exists then it overrides it.
+       */
+      Object.assign(_this.data, update);
+    };
+  }
+
+  return Attributes;
+}();
+
+exports.Attributes = Attributes; // Example of usage:
+// const attrs = new Attributes<UserProps>({
+//   id: 5,
+//   age: 20,
+//   name: 'asdf'
+// });
+// const name = attrs.get('name');
+},{}],"src/models/User.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4653,40 +4704,77 @@ var Eventing_1 = require("./Eventing");
 
 var Sync_1 = require("./Sync");
 
+var Attributes_1 = require("./Attributes");
+
 var rootUrl = 'http://localhost:3000/users';
 
 var User =
 /** @class */
 function () {
-  function User(data) {
-    this.data = data;
+  /**
+   * Since we want to be able to pass in UserProps into User when we create
+   * an instance of User we need to initialize attributes in the constructor.
+   */
+  function User(attrs) {
     /**
      * Hard coding an events instance for use in User.
      */
-
     this.events = new Eventing_1.Eventing();
     this.sync = new Sync_1.Sync(rootUrl);
+    this.attributes = new Attributes_1.Attributes(attrs);
   }
 
-  User.prototype.get = function (propName) {
-    return this.data[propName];
-  };
+  Object.defineProperty(User.prototype, "on", {
+    /**
+     * Create a reference to the this.event.on() function using get.
+     * The get syntax binds an object property to a function that
+     * will be called when that property is looked up.
+     */
+    get: function get() {
+      return this.events.on;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "trigger", {
+    get: function get() {
+      return this.events.trigger;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(User.prototype, "get", {
+    get: function get() {
+      return this.attributes.get;
+    },
+    enumerable: false,
+    configurable: true
+  });
 
   User.prototype.set = function (update) {
-    /**
-     * The Object.assign() method takes 2 objects as arguments.
-     * It takes all of the properties of the second object and copies
-     * them over into the first object.  If a property already
-     * exists then it overrides it.
-     */
-    Object.assign(this.data, update);
+    this.attributes.set(update);
+    this.events.trigger('change');
+  };
+
+  User.prototype.fetch = function () {
+    var _this = this;
+
+    var id = this.attributes.get('id');
+
+    if (typeof id !== 'number') {
+      throw new Error('Cannot fetch without an id');
+    }
+
+    this.sync.fetch(id).then(function (response) {
+      _this.set(response.data);
+    });
   };
 
   return User;
 }();
 
 exports.User = User;
-},{"./Eventing":"src/models/Eventing.ts","./Sync":"src/models/Sync.ts"}],"src/index.ts":[function(require,module,exports) {
+},{"./Eventing":"src/models/Eventing.ts","./Sync":"src/models/Sync.ts","./Attributes":"src/models/Attributes.ts"}],"src/index.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4696,13 +4784,15 @@ Object.defineProperty(exports, "__esModule", {
 var User_1 = require("./models/User");
 
 var user = new User_1.User({
-  name: 'noo foo',
-  age: 0.1
+  id: 1
 });
-user.events.on('change', function () {
-  console.log('change!');
-});
-user.events.trigger('change');
+/** This will run the events.on() function. */
+
+user.on('change', function () {
+  console.log(user);
+}); // user.set({name: 'new noo foo'});
+
+user.fetch();
 },{"./models/User":"src/models/User.ts"}],"C:/Users/Trader/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -4731,7 +4821,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59620" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63859" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
