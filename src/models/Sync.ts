@@ -8,16 +8,18 @@ interface HasId {
 }
 
 /**
- * In order to make sure that Typescript knows that the generic we use 
- * a generic constraint so any use of class Sync needs to have an 
- * id property.  We extend T with an interface that has an id of type number.
+ * We apply a generic constraint so any use of class Sync needs to have an 
+ * id property.
+ * The syntax for this occurs inside of the angle brackets.
+ * We extend T with an interface that has an id of type number.
  */
 export class Sync<T extends HasId> {
   constructor(public rootUrl: string) {}
 
   /**
    * We use axios to make a xhr call with get() that will return a promise
-   * of user data at some future point.  We import the AxioPromise data type.
+   * of user data at some future point.  We import and apply the AxiosPromise 
+   * data type to the data that will be returned.
    */
   fetch(id: number): AxiosPromise {
     return axios.get(`${this.rootUrl}/${id}`);

@@ -4602,9 +4602,10 @@ exports.Sync = void 0;
 
 var axios_1 = __importDefault(require("axios"));
 /**
- * In order to make sure that Typescript knows that the generic we use
- * a generic constraint so any use of class Sync needs to have an
- * id property.  We extend T with an interface that has an id of type number.
+ * We apply a generic constraint so any use of class Sync needs to have an
+ * id property.
+ * The syntax for this occurs inside of the angle brackets.
+ * We extend T with an interface that has an id of type number.
  */
 
 
@@ -4616,7 +4617,8 @@ function () {
   }
   /**
    * We use axios to make a xhr call with get() that will return a promise
-   * of user data at some future point.  We import the AxioPromise data type.
+   * of user data at some future point.  We import and apply the AxiosPromise
+   * data type to the data that will be returned.
    */
 
 
@@ -4681,6 +4683,10 @@ function () {
       Object.assign(_this.data, update);
     };
   }
+
+  Attributes.prototype.getAll = function () {
+    return this.data;
+  };
 
   return Attributes;
 }();
@@ -4750,11 +4756,32 @@ function () {
     enumerable: false,
     configurable: true
   });
+  /**
+   * Create class methods that utilize imported methods.
+   * This allows you to call the method directly from the instance variable,
+   * i.e. const user = new User(UserProps);
+   * user.set(updateObject);
+   */
+
+  /**
+   * The set method does 2 things.
+   * 1) It updates the data property in the attributes class.
+   * 2) It triggers the change event to inform other parts of the app
+   *    that data has been updated so some change might need to be done to the DOM.
+   */
 
   User.prototype.set = function (update) {
     this.attributes.set(update);
     this.events.trigger('change');
   };
+  /**
+   * To fetch user data we need to coordinate getting information from
+   * the Attributes and the Sync class.  First we need to get an id from
+   * the attributes class.  Then, if we have an id we access the fetch method
+   * on the sync class which makes an xhr call using the axios library to get
+   * user data from the json-server.
+   */
+
 
   User.prototype.fetch = function () {
     var _this = this;
@@ -4764,9 +4791,23 @@ function () {
     if (typeof id !== 'number') {
       throw new Error('Cannot fetch without an id');
     }
+    /**
+     * When we call sync.fetch it returns a promise of type AxiosResponse.
+     */
+
 
     this.sync.fetch(id).then(function (response) {
       _this.set(response.data);
+    });
+  };
+
+  User.prototype.save = function () {
+    var _this = this;
+
+    this.sync.save(this.attributes.getAll()).then(function (response) {
+      _this.trigger('save');
+    }).catch(function () {
+      _this.trigger('error');
     });
   };
 
@@ -4784,15 +4825,17 @@ Object.defineProperty(exports, "__esModule", {
 var User_1 = require("./models/User");
 
 var user = new User_1.User({
-  id: 1
+  id: 1,
+  name: 'newerNameFoo',
+  age: 1
 });
 /** This will run the events.on() function. */
 
-user.on('change', function () {
+user.on('save', function () {
   console.log(user);
 }); // user.set({name: 'new noo foo'});
 
-user.fetch();
+user.save();
 },{"./models/User":"src/models/User.ts"}],"C:/Users/Trader/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -4821,7 +4864,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63859" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50969" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
