@@ -131,7 +131,7 @@ function () {
   function Eventing() {
     var _this = this;
     /**
-     * Events property that will be an object that stores events.
+     * Events property that will be an object that stores event names and their callbacks.
      * The value of each key will be an array of callback functions.
     */
 
@@ -139,7 +139,8 @@ function () {
     this.events = {};
 
     this.on = function (eventName, callback) {
-      var handlers = _this.events[eventName] || [];
+      var handlers = _this.events[eventName] || []; // assign || initialize
+
       handlers.push(callback);
       _this.events[eventName] = handlers;
     };
@@ -4597,11 +4598,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Sync = void 0;
 /**
- * AxiosPromise is a Typescript data definition that can be used
- * in a RESTful call that returns a response as a promise.  */
+ * AxiosPromise is a Typescript data definition provided by axios that
+ * can be used for RESTful calls that return a response as a promise.
+ */
 
 var axios_1 = __importDefault(require("axios"));
 /**
+ * Sync allows us to save and fetch data from a remote server.
+ * We use axios to make the xhr calls to the remote server.
  * We apply a generic constraint so any use of class Sync needs to have an
  * id property.
  * The syntax for this occurs inside of the angle brackets.
@@ -4646,12 +4650,16 @@ function () {
 
 exports.Sync = Sync;
 },{"axios":"node_modules/axios/index.js"}],"src/models/Attributes.ts":[function(require,module,exports) {
-"use strict"; // import { UserProps } from './User';   // used in the example at the bottom
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Attributes = void 0;
+/**
+ * Attributes stores a data object and has methods that
+ * get, getAll and saves that data.
+ */
 
 var Attributes =
 /** @class */
@@ -4691,13 +4699,7 @@ function () {
   return Attributes;
 }();
 
-exports.Attributes = Attributes; // Example of usage:
-// const attrs = new Attributes<UserProps>({
-//   id: 5,
-//   age: 20,
-//   name: 'asdf'
-// });
-// const name = attrs.get('name');
+exports.Attributes = Attributes;
 },{}],"src/models/User.ts":[function(require,module,exports) {
 "use strict";
 
@@ -4823,6 +4825,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var User_1 = require("./models/User");
+/**
+ * To create a new user pass in a name and/or age but no id.
+ */
+
 
 var user = new User_1.User({
   id: 1,
@@ -4833,9 +4839,12 @@ var user = new User_1.User({
 
 user.on('save', function () {
   console.log(user);
-}); // user.set({name: 'new noo foo'});
-
+});
+user.set({
+  name: 'new noo foo'
+});
 user.save();
+console.log(user.fetch());
 },{"./models/User":"src/models/User.ts"}],"C:/Users/Trader/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';

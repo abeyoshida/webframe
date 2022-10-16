@@ -1,5 +1,7 @@
-// import { UserProps } from './User';   // used in the example at the bottom
-
+/**
+ * Attributes stores a data object and has methods that 
+ * get, getAll and saves that data.
+ */
 export class Attributes<T> {
   constructor(private data: T) {}
 
@@ -30,12 +32,3 @@ export class Attributes<T> {
   }
 
 }
-
-// Example of usage:
-// const attrs = new Attributes<UserProps>({
-//   id: 5,
-//   age: 20,
-//   name: 'asdf'
-// });
-
-// const name = attrs.get('name');

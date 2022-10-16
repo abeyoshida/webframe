@@ -3,15 +3,16 @@ type Callback = () => void;
 
 export class Eventing {
   /** 
-   * Events property that will be an object that stores events.
+   * Events property that will be an object that stores event names and their callbacks.
    * The value of each key will be an array of callback functions.
   */
   events: { [key: string]: Callback[] } = {};
 
   on = (eventName: string, callback: Callback): void => {
-    const handlers = this.events[eventName] || [];
+    const handlers = this.events[eventName] || [];  // assign || initialize
     handlers.push(callback);
     this.events[eventName] = handlers;
+    
   }
 
   trigger = (eventName: string): void => {

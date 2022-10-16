@@ -1,13 +1,16 @@
 /** 
- * AxiosPromise is a Typescript data definition that can be used
- * in a RESTful call that returns a response as a promise.  */
- import axios, { AxiosPromise } from 'axios';
+ * AxiosPromise is a Typescript data definition provided by axios that 
+ * can be used for RESTful calls that return a response as a promise.  
+ */
+import axios, { AxiosPromise } from 'axios';
 
 interface HasId {
   id?: number;
 }
 
 /**
+ * Sync allows us to save and fetch data from a remote server.
+ * We use axios to make the xhr calls to the remote server.
  * We apply a generic constraint so any use of class Sync needs to have an 
  * id property.
  * The syntax for this occurs inside of the angle brackets.
