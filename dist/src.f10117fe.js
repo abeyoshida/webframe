@@ -4865,6 +4865,10 @@ function (_super) {
   function User() {
     return _super !== null && _super.apply(this, arguments) || this;
   }
+  /**
+   * Create a different User with different static class properties.
+   */
+
 
   User.buildUser = function (attrs) {
     return new User(new Attributes_1.Attributes(attrs), new Eventing_1.Eventing(), new ApiSync_1.ApiSync(rootUrl));
