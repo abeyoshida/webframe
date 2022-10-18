@@ -3,16 +3,18 @@ import { User } from './models/User';
 /**
  * To create a new user pass in a name and/or age but no id.
  */
-const user = new User({ id: 1, name: 'newerNameFoo', age: 1 });
+const user = User.buildUser({ id: 1 });
 
-/** This will run the events.on() function. */
-user.on('save', () => {
+/** 
+ * This will run the events.on() function. 
+ * user.on is a reference to the on() method in Eventing.
+ * The parens that follow invokes the on method in Eventing
+ * and not the get on() method in User.  This is the difference
+ * between creating a reference to a function and directly invoking a function.
+ * */
+user.on('change', () => {
   console.log(user) ;
 });
 
-user.set({name: 'new noo foo'});
 
-user.save();
-
-
-console.log(user.fetch());
+user.fetch();

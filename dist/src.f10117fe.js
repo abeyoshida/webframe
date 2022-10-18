@@ -117,47 +117,168 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"src/models/Eventing.ts":[function(require,module,exports) {
+})({"src/models/Model.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Eventing = void 0;
+exports.Model = void 0;
 
-var Eventing =
+var Model =
 /** @class */
 function () {
-  function Eventing() {
-    var _this = this;
+  function Model(attributes, events, sync) {
+    this.attributes = attributes;
+    this.events = events;
+    this.sync = sync;
+  }
+
+  Object.defineProperty(Model.prototype, "on", {
     /**
-     * Events property that will be an object that stores event names and their callbacks.
-     * The value of each key will be an array of callback functions.
-    */
+     * Create a pass through method by providing a reference to
+     * the this.event.on() function using the "get" accessor keyword.
+     * The get syntax binds an object property to a function that
+     * will be called when that property is looked up.
+     *
+     * The goal is NOT to call the on method which would require passing required arguments.
+     * The goal here is to just pass a reference to the on method using the getter accessor.
+     */
+    get: function get() {
+      /**
+       * There are no function parens at the end of on because we
+       * are NOT calling events.on().  Instead we are passing a
+       * reference.
+       */
+      return this.events.on;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Model.prototype, "trigger", {
+    get: function get() {
+      return this.events.trigger;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  Object.defineProperty(Model.prototype, "get", {
+    get: function get() {
+      return this.attributes.get;
+    },
+    enumerable: false,
+    configurable: true
+  });
+  /**
+   * Create class methods that utilize imported methods.
+   * This allows you to call the method directly from the instance variable,
+   * i.e. const user = new User(UserProps);
+   * user.set(updateObject);
+   */
+
+  /**
+   * The set method does 2 things.
+   * 1) It updates the data property in the attributes class.
+   * 2) It triggers the change event to inform other parts of the app
+   *    that data has been updated so some change might need to be done to the DOM.
+   */
+
+  Model.prototype.set = function (update) {
+    this.attributes.set(update);
+    this.events.trigger('change');
+  };
+  /**
+   * To fetch user data we need to coordinate getting information from
+   * the Attributes and the Sync class.  First we need to get an id from
+   * the attributes class.  Then, if we have an id we access the fetch method
+   * on the sync class which makes an xhr call using the axios library to get
+   * user data from the json-server.
+   */
 
 
-    this.events = {};
+  Model.prototype.fetch = function () {
+    var _this = this;
 
-    this.on = function (eventName, callback) {
-      var handlers = _this.events[eventName] || []; // assign || initialize
+    var id = this.attributes.get('id');
 
-      handlers.push(callback);
-      _this.events[eventName] = handlers;
+    if (typeof id !== 'number') {
+      throw new Error('Cannot fetch without an id');
+    }
+    /**
+     * When we call sync.fetch it returns a promise of type AxiosResponse.
+     */
+
+
+    this.sync.fetch(id).then(function (response) {
+      _this.set(response.data);
+    });
+  };
+
+  Model.prototype.save = function () {
+    var _this = this;
+
+    this.sync.save(this.attributes.getAll()).then(function (response) {
+      _this.trigger('save');
+    }).catch(function () {
+      _this.trigger('error');
+    });
+  };
+
+  return Model;
+}();
+
+exports.Model = Model;
+},{}],"src/models/Attributes.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Attributes = void 0;
+/**
+ * Attributes stores a data object and has methods that
+ * get, getAll and saves that data.
+ */
+
+var Attributes =
+/** @class */
+function () {
+  function Attributes(data) {
+    var _this = this;
+
+    this.data = data;
+    /**
+     * We set up a generic constraint on the arguments that get() can receive.
+     * Here we are saying that they can only be keys (K) that are part of T (object).
+     * K can only be a key of T
+     * We are using the Typescript feature that strings can be types and therefore
+     * keys of an object (strings) can be types also.
+     * The return value is in the syntax of a regular object - object of T at key of K.
+     */
+
+    this.get = function (key) {
+      return _this.data[key];
     };
 
-    this.trigger = function (eventName) {
-      var handlers = _this.events[eventName];
-      if (!handlers || handlers.length === 0) return;
-      handlers.forEach(function (callback) {
-        callback();
-      });
+    this.set = function (update) {
+      /**
+       * The Object.assign() method takes 2 objects as arguments.
+       * It takes all of the properties of the second object and copies
+       * them over into the first object.  If a property already
+       * exists then it overrides it.
+       */
+      Object.assign(_this.data, update);
     };
   }
 
-  return Eventing;
+  Attributes.prototype.getAll = function () {
+    return this.data;
+  };
+
+  return Attributes;
 }();
 
-exports.Eventing = Eventing;
+exports.Attributes = Attributes;
 },{}],"node_modules/axios/lib/helpers/bind.js":[function(require,module,exports) {
 'use strict';
 
@@ -4584,7 +4705,7 @@ module.exports.default = axios;
 
 },{"./utils":"node_modules/axios/lib/utils.js","./helpers/bind":"node_modules/axios/lib/helpers/bind.js","./core/Axios":"node_modules/axios/lib/core/Axios.js","./core/mergeConfig":"node_modules/axios/lib/core/mergeConfig.js","./defaults":"node_modules/axios/lib/defaults/index.js","./cancel/CanceledError":"node_modules/axios/lib/cancel/CanceledError.js","./cancel/CancelToken":"node_modules/axios/lib/cancel/CancelToken.js","./cancel/isCancel":"node_modules/axios/lib/cancel/isCancel.js","./env/data":"node_modules/axios/lib/env/data.js","./helpers/toFormData":"node_modules/axios/lib/helpers/toFormData.js","../lib/core/AxiosError":"node_modules/axios/lib/core/AxiosError.js","./helpers/spread":"node_modules/axios/lib/helpers/spread.js","./helpers/isAxiosError":"node_modules/axios/lib/helpers/isAxiosError.js"}],"node_modules/axios/index.js":[function(require,module,exports) {
 module.exports = require('./lib/axios');
-},{"./lib/axios":"node_modules/axios/lib/axios.js"}],"src/models/Sync.ts":[function(require,module,exports) {
+},{"./lib/axios":"node_modules/axios/lib/axios.js"}],"src/models/ApiSync.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -4596,7 +4717,7 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Sync = void 0;
+exports.ApiSync = void 0;
 /**
  * AxiosPromise is a Typescript data definition provided by axios that
  * can be used for RESTful calls that return a response as a promise.
@@ -4613,10 +4734,10 @@ var axios_1 = __importDefault(require("axios"));
  */
 
 
-var Sync =
+var ApiSync =
 /** @class */
 function () {
-  function Sync(rootUrl) {
+  function ApiSync(rootUrl) {
     this.rootUrl = rootUrl;
   }
   /**
@@ -4626,11 +4747,11 @@ function () {
    */
 
 
-  Sync.prototype.fetch = function (id) {
+  ApiSync.prototype.fetch = function (id) {
     return axios_1.default.get("".concat(this.rootUrl, "/").concat(id));
   };
 
-  Sync.prototype.save = function (data) {
+  ApiSync.prototype.save = function (data) {
     var id = data.id;
     /**
      * If a user exists then use a put request to save new data to an existing user.
@@ -4645,179 +4766,115 @@ function () {
     }
   };
 
-  return Sync;
+  return ApiSync;
 }();
 
-exports.Sync = Sync;
-},{"axios":"node_modules/axios/index.js"}],"src/models/Attributes.ts":[function(require,module,exports) {
+exports.ApiSync = ApiSync;
+},{"axios":"node_modules/axios/index.js"}],"src/models/Eventing.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Attributes = void 0;
-/**
- * Attributes stores a data object and has methods that
- * get, getAll and saves that data.
- */
+exports.Eventing = void 0;
 
-var Attributes =
+var Eventing =
 /** @class */
 function () {
-  function Attributes(data) {
+  function Eventing() {
     var _this = this;
-
-    this.data = data;
     /**
-     * We set up a generic constraint on the arguments that get() can receive.
-     * Here we are saying that they can only be keys (K) that are part of T (object).
-     * K can only be a key of T
-     * We are using the Typescript feature that strings can be types and therefore
-     * keys of an object (strings) can be types also.
-     * The return value is in the syntax of a regular object - object of T at key of K.
-     */
+     * Events property that will be an object that stores event names and their callbacks.
+     * The value of each key will be an array of callback functions.
+    */
 
-    this.get = function (key) {
-      return _this.data[key];
+
+    this.events = {};
+
+    this.on = function (eventName, callback) {
+      var handlers = _this.events[eventName] || []; // assign || initialize
+
+      handlers.push(callback);
+      _this.events[eventName] = handlers;
     };
 
-    this.set = function (update) {
-      /**
-       * The Object.assign() method takes 2 objects as arguments.
-       * It takes all of the properties of the second object and copies
-       * them over into the first object.  If a property already
-       * exists then it overrides it.
-       */
-      Object.assign(_this.data, update);
+    this.trigger = function (eventName) {
+      var handlers = _this.events[eventName];
+      if (!handlers || handlers.length === 0) return;
+      handlers.forEach(function (callback) {
+        callback();
+      });
     };
   }
 
-  Attributes.prototype.getAll = function () {
-    return this.data;
-  };
-
-  return Attributes;
+  return Eventing;
 }();
 
-exports.Attributes = Attributes;
+exports.Eventing = Eventing;
 },{}],"src/models/User.ts":[function(require,module,exports) {
 "use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.User = void 0;
 
-var Eventing_1 = require("./Eventing");
-
-var Sync_1 = require("./Sync");
+var Model_1 = require("./Model");
 
 var Attributes_1 = require("./Attributes");
+
+var ApiSync_1 = require("./ApiSync");
+
+var Eventing_1 = require("./Eventing");
 
 var rootUrl = 'http://localhost:3000/users';
 
 var User =
 /** @class */
-function () {
-  /**
-   * Since we want to be able to pass in UserProps into User when we create
-   * an instance of User we need to initialize attributes in the constructor.
-   */
-  function User(attrs) {
-    /**
-     * Hard coding an events instance for use in User.
-     */
-    this.events = new Eventing_1.Eventing();
-    this.sync = new Sync_1.Sync(rootUrl);
-    this.attributes = new Attributes_1.Attributes(attrs);
+function (_super) {
+  __extends(User, _super);
+
+  function User() {
+    return _super !== null && _super.apply(this, arguments) || this;
   }
 
-  Object.defineProperty(User.prototype, "on", {
-    /**
-     * Create a reference to the this.event.on() function using get.
-     * The get syntax binds an object property to a function that
-     * will be called when that property is looked up.
-     */
-    get: function get() {
-      return this.events.on;
-    },
-    enumerable: false,
-    configurable: true
-  });
-  Object.defineProperty(User.prototype, "trigger", {
-    get: function get() {
-      return this.events.trigger;
-    },
-    enumerable: false,
-    configurable: true
-  });
-  Object.defineProperty(User.prototype, "get", {
-    get: function get() {
-      return this.attributes.get;
-    },
-    enumerable: false,
-    configurable: true
-  });
-  /**
-   * Create class methods that utilize imported methods.
-   * This allows you to call the method directly from the instance variable,
-   * i.e. const user = new User(UserProps);
-   * user.set(updateObject);
-   */
-
-  /**
-   * The set method does 2 things.
-   * 1) It updates the data property in the attributes class.
-   * 2) It triggers the change event to inform other parts of the app
-   *    that data has been updated so some change might need to be done to the DOM.
-   */
-
-  User.prototype.set = function (update) {
-    this.attributes.set(update);
-    this.events.trigger('change');
-  };
-  /**
-   * To fetch user data we need to coordinate getting information from
-   * the Attributes and the Sync class.  First we need to get an id from
-   * the attributes class.  Then, if we have an id we access the fetch method
-   * on the sync class which makes an xhr call using the axios library to get
-   * user data from the json-server.
-   */
-
-
-  User.prototype.fetch = function () {
-    var _this = this;
-
-    var id = this.attributes.get('id');
-
-    if (typeof id !== 'number') {
-      throw new Error('Cannot fetch without an id');
-    }
-    /**
-     * When we call sync.fetch it returns a promise of type AxiosResponse.
-     */
-
-
-    this.sync.fetch(id).then(function (response) {
-      _this.set(response.data);
-    });
-  };
-
-  User.prototype.save = function () {
-    var _this = this;
-
-    this.sync.save(this.attributes.getAll()).then(function (response) {
-      _this.trigger('save');
-    }).catch(function () {
-      _this.trigger('error');
-    });
+  User.buildUser = function (attrs) {
+    return new User(new Attributes_1.Attributes(attrs), new Eventing_1.Eventing(), new ApiSync_1.ApiSync(rootUrl));
   };
 
   return User;
-}();
+}(Model_1.Model);
 
 exports.User = User;
-},{"./Eventing":"src/models/Eventing.ts","./Sync":"src/models/Sync.ts","./Attributes":"src/models/Attributes.ts"}],"src/index.ts":[function(require,module,exports) {
+},{"./Model":"src/models/Model.ts","./Attributes":"src/models/Attributes.ts","./ApiSync":"src/models/ApiSync.ts","./Eventing":"src/models/Eventing.ts"}],"src/index.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4830,21 +4887,21 @@ var User_1 = require("./models/User");
  */
 
 
-var user = new User_1.User({
-  id: 1,
-  name: 'newerNameFoo',
-  age: 1
+var user = User_1.User.buildUser({
+  id: 1
 });
-/** This will run the events.on() function. */
+/**
+ * This will run the events.on() function.
+ * user.on is a reference to the on() method in Eventing.
+ * The parens that follow invokes the on method in Eventing
+ * and not the get on() method in User.  This is the difference
+ * between creating a reference to a function and directly invoking a function.
+ * */
 
-user.on('save', function () {
+user.on('change', function () {
   console.log(user);
 });
-user.set({
-  name: 'new noo foo'
-});
-user.save();
-console.log(user.fetch());
+user.fetch();
 },{"./models/User":"src/models/User.ts"}],"C:/Users/Trader/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';

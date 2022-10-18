@@ -16,7 +16,7 @@ interface HasId {
  * The syntax for this occurs inside of the angle brackets.
  * We extend T with an interface that has an id of type number.
  */
-export class Sync<T extends HasId> {
+export class ApiSync<T extends HasId> {
   constructor(public rootUrl: string) {}
 
   /**
