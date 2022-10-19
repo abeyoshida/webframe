@@ -36,22 +36,25 @@ export class Model<T extends HasId> {
    * The goal is NOT to call the on method which would require passing required arguments.
    * The goal here is to just pass a reference to the on method using the getter accessor.
    */
-   get on() {
-    /** 
-     * There are no function parens at the end of on because we
-     * are NOT calling events.on().  Instead we are passing a
-     * reference.
-     */
-    return this.events.on;
-  }
+  // get on() {
+  //   /** 
+  //    * There are no function parens at the end of on because we
+  //    * are NOT calling events.on().  Instead we are passing a
+  //    * reference.
+  //   */
+  //   return this.events.on;
+  // }
+  on = this.events.on;
 
-  get trigger() {
-    return this.events.trigger;
-  }
+  // get trigger() {
+  //   return this.events.trigger;
+  // }
+  trigger = this.events.trigger;
 
-  get get() {
-    return this.attributes.get;
-  }
+  // get get() {
+  //   return this.attributes.get;
+  // }
+  get = this.attributes.get;
 
   /**
    * Create class methods that utilize imported methods.

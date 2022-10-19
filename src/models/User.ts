@@ -2,6 +2,7 @@ import { Model } from './Model';
 import { Attributes} from './Attributes';
 import { ApiSync } from './ApiSync';
 import { Eventing } from './Eventing';
+import { Collection } from './Collection';
 
 /**
  * This interface defines the data object that can be used to
@@ -28,8 +29,11 @@ export class User extends Model<UserProps> {
     );
   }
 
-  /**
-   * Add a buildLocalUser that would Sync with localStorage
-   * instead of making a remote api call.
-   */
+  static buildUserCollection(): Collection<User, UserProps> {
+    return new Collection<User, UserProps>(
+      rootUrl,
+      (json: UserProps) => User.buildUser(json)
+    );
+  }
+ 
 }

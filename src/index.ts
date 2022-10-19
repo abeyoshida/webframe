@@ -1,9 +1,14 @@
 import { User } from './models/User';
 
+const collection = User.buildUserCollection();
+collection.on('change', () => {
+  console.log(collection);
+});
+collection.fetch();
 /**
  * To create a new user pass in a name and/or age but no id.
  */
-const user = User.buildUser({ id: 1 });
+// const user = User.buildUser({ id: 1 });
 
 /** 
  * This will run the events.on() function. 
@@ -12,9 +17,8 @@ const user = User.buildUser({ id: 1 });
  * and not the get on() method in User.  This is the difference
  * between creating a reference to a function and directly invoking a function.
  * */
-user.on('change', () => {
-  console.log(user) ;
-});
+// user.on('change', () => {
+//   console.log(user) ;
+// });
+// user.fetch();
 
-
-user.fetch();
