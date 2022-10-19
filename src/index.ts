@@ -1,10 +1,17 @@
 import { User } from './models/User';
+import { UserForm } from './views/UserForm';
 
-const collection = User.buildUserCollection();
-collection.on('change', () => {
-  console.log(collection);
-});
-collection.fetch();
+const user = User.buildUser({name: 'NAME', age: 20});
+
+const userForm = new UserForm(document.getElementById('root'));
+userForm.render();
+
+// const collection = User.buildUserCollection();
+// collection.on('change', () => {
+//   console.log(collection);
+// });
+// collection.fetch();
+
 /**
  * To create a new user pass in a name and/or age but no id.
  */
