@@ -3,13 +3,14 @@ import { UserForm } from './views/UserForm';
 
 const user = User.buildUser({name: 'NAME', age: 20});
 
-const userForm = new UserForm(document.getElementById('root'));
+const userForm = new UserForm(document.getElementById('root'), user);
 userForm.render();
 
 // const collection = User.buildUserCollection();
 // collection.on('change', () => {
 //   console.log(collection);
 // });
+
 // collection.fetch();
 
 /**
